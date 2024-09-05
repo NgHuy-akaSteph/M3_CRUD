@@ -21,11 +21,10 @@ public class StudentServiceImpl implements StudentService {
     }
 
     private static final String FIND_ALL = "SELECT * FROM student";
-    private static final String FIND_BY_ID = "SELECT * FROM student WHERE id = ?";
-    private static final String INSERT_SQL = "INSERT INTO student(student_name, student_gender, student_email, student_point) " +
-            "VALUES(?, ?, ?, ?)";
+    private static final String FIND_BY_ID = "SELECT * FROM student WHERE student_id = ?";
+    private static final String INSERT_SQL = "INSERT INTO student(student_name, student_gender, student_email, student_point) " + "VALUES(?, ?, ?, ?)";
     private static final String DELETE_SQL = "DELETE FROM student WHERE student_id = ?";
-    private static final String UPDATE_SQL = "UPDATE student SET student_name = ?, gender = ?, email = ?, point = ? WHERE student_id = ?";
+    private static final String UPDATE_SQL = "UPDATE student SET student_name = ?, student_gender = ?, student_email = ?, student_point = ? WHERE student_id = ?";
 
     @Override
     public List<Student> findAll() {
@@ -71,11 +70,10 @@ public class StudentServiceImpl implements StudentService {
     }
 
 
-        @Override
+    @Override
     public void save(Student student) {
         Connection connection = baseRepository.getConnection();
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement(INSERT_SQL);
+        try (PreparedStatement preparedStatement = connection.prepareStatement(INSERT_SQL)){
             preparedStatement.setString(1, student.getName());
             preparedStatement.setBoolean(2, student.isGender());
             preparedStatement.setString(3, student.getEmail());
@@ -87,10 +85,27 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    public boolean update(Student student) {
+        boolean rowUpdated = false;
+        Connection connection = baseRepository.getConnection();
+        try (PreparedStatement statement = connection.prepareStatement(UPDATE_SQL)) {
+            statement.setString(1, student.getName());
+            statement.setBoolean(2, student.isGender());
+            statement.setString(3, student.getEmail());
+            statement.setDouble(4, student.getPoint());
+            statement.setInt(5, student.getId());
+            rowUpdated = statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+        return rowUpdated;
+    }
+
+    @Override
     public boolean delete(int id){
         boolean rowDeleted = false;
-        try (Connection connection = baseRepository.getConnection();
-             PreparedStatement statement = connection.prepareStatement(DELETE_SQL)) {
+        Connection connection = baseRepository.getConnection();
+        try (PreparedStatement statement = connection.prepareStatement(DELETE_SQL)) {
             statement.setInt(1, id);
             rowDeleted = statement.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -98,5 +113,6 @@ public class StudentServiceImpl implements StudentService {
         }
         return rowDeleted;
     }
+
 
 }

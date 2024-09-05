@@ -36,6 +36,7 @@ public class StudentServlet extends HttpServlet {
                     showCreateForm(request, response);
                     break;
                 case "edit":
+                    showEditForm(request, response);
                     break;
                 case "delete":
                     deleteStudent(request, response);
@@ -47,7 +48,6 @@ public class StudentServlet extends HttpServlet {
             throw new ServletException(e);
         }
     }
-
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
@@ -63,7 +63,9 @@ public class StudentServlet extends HttpServlet {
             switch (action) {
                 case "create":
                     insertStudent(request, response);
+                    break;
                 case "edit":
+                    editStudent(request, response);
                     break;
                 default:
                     selectAll(request, response);
@@ -74,6 +76,7 @@ public class StudentServlet extends HttpServlet {
         }
     }
 
+
     // Select all students
     private void selectAll(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
         List<Student> list = studentService.findAll();
@@ -82,14 +85,6 @@ public class StudentServlet extends HttpServlet {
         requestDispatcher.forward(request, response);
     }
 
-    // Select student by id
-    private void selectById(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
-        int id = Integer.parseInt(request.getParameter("id"));
-        Student student = studentService.findById(id);
-        request.setAttribute("student", student);
-        RequestDispatcher requestDispatcher = request.getRequestDispatcher("student-info.jsp");
-        requestDispatcher.forward(request, response);
-    }
 
     // Show create form to insert new student
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -103,7 +98,7 @@ public class StudentServlet extends HttpServlet {
         boolean gender = request.getParameter("gender").equals("male");
         String email = request.getParameter("email");
         double point = Double.parseDouble(request.getParameter("point"));
-        studentService.save(new Student(1, name, gender, email, point));
+        studentService.save(new Student(name, gender, email, point));
         try {
             response.sendRedirect("/");
         } catch (IOException e) {
@@ -123,4 +118,33 @@ public class StudentServlet extends HttpServlet {
             System.err.println("Delete failed!");
         }
     }
+
+    // Show edit form to update student
+    private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        Student student = studentService.findById(id);
+        request.setAttribute("student", student);
+        RequestDispatcher requestDispatcher = request.getRequestDispatcher("edit-student.jsp");
+        requestDispatcher.forward(request, response);
+    }
+
+    // Update student
+    private void editStudent(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        String name = request.getParameter("name");
+        boolean gender = request.getParameter("gender").equals("male");
+        String email = request.getParameter("email");
+        double point = Double.parseDouble(request.getParameter("point"));
+        boolean isUpdated = studentService.update(new Student(id, name,gender, email, point));
+        if(isUpdated) {
+            List<Student> list = studentService.findAll();
+            request.setAttribute("list", list);
+            RequestDispatcher requestDispatcher = request.getRequestDispatcher("student-list.jsp");
+            requestDispatcher.forward(request, response);
+        } else {
+            System.err.println("Update failed!");
+        }
+    }
+
+
 }

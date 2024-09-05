@@ -9,10 +9,10 @@ public interface StudentService {
     List<Student> findAll();
 
     Student findById(int id);
-//
+
     void save(Student student);
-//
-//    void update(int id, Student student);
-//
+
+    boolean update(Student student);
+
     boolean delete(int id);
 }

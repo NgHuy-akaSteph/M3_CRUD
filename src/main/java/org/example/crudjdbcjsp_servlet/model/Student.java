@@ -18,6 +18,13 @@ public class Student {
         this.point = point;
     }
 
+    public Student(String name, boolean gender, String email, double point) {
+        this.name = name;
+        this.gender = gender;
+        this.email = email;
+        this.point = point;
+    }
+
     public int getId() {
         return id;
     }

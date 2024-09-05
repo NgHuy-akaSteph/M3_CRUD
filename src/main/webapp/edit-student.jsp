@@ -9,7 +9,10 @@
 <body>
 <div class="container mt-5">
     <h1>Thông tin của học viên mới</h1>
-    <form action="?action=create" method="post">
+    <form action="?action=edit" method="post">
+        <div class="form-group">
+            <input type="hidden" id="id" name="id" value="${student.id}">
+        </div>
         <div class="form-group">
             <label for="name">Họ và tên:</label>
             <input type="text" class="form-control" id="name" name="name" required>
@@ -34,7 +37,7 @@
             <input type="number" class="form-control" id="point" name="point" step="0.01" required>
         </div>
         <br>
-        <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+        <button type="submit" class="btn btn-primary btn-lg">Save</button>
     </form>
 </div>
 
