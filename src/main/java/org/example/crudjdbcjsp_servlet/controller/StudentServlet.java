@@ -1,5 +1,6 @@
 package org.example.crudjdbcjsp_servlet.controller;
 
+import org.example.crudjdbcjsp_servlet.model.CGClass;
 import org.example.crudjdbcjsp_servlet.model.Student;
 import org.example.crudjdbcjsp_servlet.service.StudentService;
 import org.example.crudjdbcjsp_servlet.service.StudentServiceImpl;
@@ -88,6 +89,8 @@ public class StudentServlet extends HttpServlet {
 
     // Show create form to insert new student
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        List<CGClass> list = studentService.findAllClass();
+        request.setAttribute("list", list);
         RequestDispatcher requestDispatcher = request.getRequestDispatcher("create-new-student.jsp");
         requestDispatcher.forward(request, response);
     }
@@ -98,7 +101,8 @@ public class StudentServlet extends HttpServlet {
         boolean gender = request.getParameter("gender").equals("male");
         String email = request.getParameter("email");
         double point = Double.parseDouble(request.getParameter("point"));
-        studentService.save(new Student(name, gender, email, point));
+        int classId = Integer.parseInt(request.getParameter("classId"));
+        studentService.save(new Student(name, gender, email, point, new CGClass(classId)));
         try {
             response.sendRedirect("/");
         } catch (IOException e) {
@@ -122,8 +126,8 @@ public class StudentServlet extends HttpServlet {
     // Show edit form to update student
     private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
-        Student student = studentService.findById(id);
-        request.setAttribute("student", student);
+        request.setAttribute("student", studentService.findById(id));
+        request.setAttribute("list", studentService.findAllClass());
         RequestDispatcher requestDispatcher = request.getRequestDispatcher("edit-student.jsp");
         requestDispatcher.forward(request, response);
     }
@@ -133,9 +137,10 @@ public class StudentServlet extends HttpServlet {
         int id = Integer.parseInt(request.getParameter("id"));
         String name = request.getParameter("name");
         boolean gender = request.getParameter("gender").equals("male");
+        int classId = Integer.parseInt(request.getParameter("classId"));
         String email = request.getParameter("email");
         double point = Double.parseDouble(request.getParameter("point"));
-        boolean isUpdated = studentService.update(new Student(id, name,gender, email, point));
+        boolean isUpdated = studentService.update(new Student(id, name,gender, email, point, new CGClass(classId)));
         if(isUpdated) {
             List<Student> list = studentService.findAll();
             request.setAttribute("list", list);

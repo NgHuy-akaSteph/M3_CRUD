@@ -1,5 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <html>
 <head>
@@ -22,6 +22,7 @@
                 <th>Giới tính</th>
                 <th>Email</th>
                 <th>Điểm số</th>
+                <th>Lớp học</th>
                 <th colspan="2">Tùy chọn</th>
             </tr>
         </thead>
@@ -40,6 +41,7 @@
                     </td>
                     <td><c:out value="${student.email}"/></td>
                     <td><c:out value="${student.point}"/></td>
+                    <td><c:out value="${student.cgClass.name}"/></td>
                     <td>
                         <a href="?action=edit&id=${student.id}" class="btn btn-warning">Edit</a>
                         <a href="?action=delete&id=${student.id}" class="btn btn-danger">Delete</a>

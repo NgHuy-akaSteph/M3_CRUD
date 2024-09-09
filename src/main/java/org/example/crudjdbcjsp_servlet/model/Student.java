@@ -6,23 +6,26 @@ public class Student {
     private boolean gender;
     private String email;
     private double point;
+    private CGClass cgClass;
 
     public Student() {
     }
 
-    public Student(int id, String name, boolean gender, String email, double point) {
+    public Student(String name, boolean gender, String email, double point, CGClass cgClass) {
+        this.name = name;
+        this.gender = gender;
+        this.email = email;
+        this.point = point;
+        this.cgClass = cgClass;
+    }
+
+    public Student(int id, String name, boolean gender, String email, double point, CGClass cgClass) {
         this.id = id;
         this.name = name;
         this.gender = gender;
         this.email = email;
         this.point = point;
-    }
-
-    public Student(String name, boolean gender, String email, double point) {
-        this.name = name;
-        this.gender = gender;
-        this.email = email;
-        this.point = point;
+        this.cgClass = cgClass;
     }
 
     public int getId() {
@@ -63,5 +66,13 @@ public class Student {
 
     public void setPoint(double point) {
         this.point = point;
+    }
+
+    public CGClass getCgClass() {
+        return cgClass;
+    }
+
+    public void setCgClass(CGClass cgClass) {
+        this.cgClass = cgClass;
     }
 }

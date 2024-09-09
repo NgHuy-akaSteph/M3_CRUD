@@ -1,6 +1,7 @@
 package org.example.crudjdbcjsp_servlet.service;
 
 import org.example.crudjdbcjsp_servlet.common.BaseRepository;
+import org.example.crudjdbcjsp_servlet.model.CGClass;
 import org.example.crudjdbcjsp_servlet.model.Student;
 
 
@@ -20,26 +21,29 @@ public class StudentServiceImpl implements StudentService {
         }
     }
 
-    private static final String FIND_ALL = "SELECT * FROM student";
-    private static final String FIND_BY_ID = "SELECT * FROM student WHERE student_id = ?";
-    private static final String INSERT_SQL = "INSERT INTO student(student_name, student_gender, student_email, student_point) " + "VALUES(?, ?, ?, ?)";
+    private static final String FIND_ALL_CLASS = "SELECT * FROM class";
+    private static final String FIND_ALL = "CALL GetAllStudents();";
+    private static final String FIND_BY_ID = "CALL GetStudentById(?)";
+    private static final String INSERT_SQL = "INSERT INTO student(student_name, student_gender, student_email, student_point,class_id) " + "VALUES(?, ?, ?, ?, ?)";
     private static final String DELETE_SQL = "DELETE FROM student WHERE student_id = ?";
-    private static final String UPDATE_SQL = "UPDATE student SET student_name = ?, student_gender = ?, student_email = ?, student_point = ? WHERE student_id = ?";
+    private static final String UPDATE_SQL = "UPDATE student SET student_name = ?, student_gender = ?, student_email = ?, student_point = ?, class_id = ? WHERE student_id = ?";
 
     @Override
     public List<Student> findAll() {
         Connection connection = baseRepository.getConnection();
         List<Student> list = new ArrayList<>();
         try {
-            Statement statement = connection.createStatement();
-            ResultSet result = statement.executeQuery(FIND_ALL);
+            PreparedStatement preparedStatement = connection.prepareStatement(FIND_ALL);
+            ResultSet result = preparedStatement.executeQuery();
             while(result.next()) {
                 int id = result.getInt("student_id");
                 String name = result.getString("student_name");
                 boolean gender = result.getBoolean("student_gender");
                 String email = result.getString("student_email");
                 double point = result.getDouble("student_point");
-                list.add(new Student(id, name, gender, email, point));
+                int classId = result.getInt("class_id");
+                String className = result.getString("class_name");
+                list.add(new Student(id, name, gender, email, point,new CGClass(classId, className)));
             }
         } catch (SQLException e) {
             System.err.println(e.getMessage());
@@ -52,16 +56,18 @@ public class StudentServiceImpl implements StudentService {
         Connection connection = baseRepository.getConnection();
         Student student = null;
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_ID);
-            preparedStatement.setInt(1, theId);
-            ResultSet result = preparedStatement.executeQuery();
+            CallableStatement callableStatement = connection.prepareCall(FIND_BY_ID);
+            callableStatement.setInt(1, theId);
+            ResultSet result = callableStatement.executeQuery();
             while (result.next()) {
                 int id = result.getInt("student_id");
                 String name = result.getString("student_name");
                 boolean gender = result.getBoolean("student_gender");
                 String email = result.getString("student_email");
                 double point = result.getDouble("student_point");
-                student = new Student(id, name, gender, email, point);
+                int classId = result.getInt("class_id");
+                String className = result.getString("class_name");
+                student = new Student(id, name, gender, email, point, new CGClass(classId, className));
             }
         } catch (SQLException e) {
             System.err.println(e.getMessage());
@@ -78,6 +84,7 @@ public class StudentServiceImpl implements StudentService {
             preparedStatement.setBoolean(2, student.isGender());
             preparedStatement.setString(3, student.getEmail());
             preparedStatement.setDouble(4, student.getPoint());
+            preparedStatement.setInt(5, student.getCgClass().getId());
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
@@ -93,7 +100,8 @@ public class StudentServiceImpl implements StudentService {
             statement.setBoolean(2, student.isGender());
             statement.setString(3, student.getEmail());
             statement.setDouble(4, student.getPoint());
-            statement.setInt(5, student.getId());
+            statement.setInt(5, student.getCgClass().getId());
+            statement.setInt(6, student.getId());
             rowUpdated = statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println(e.getMessage());
@@ -112,6 +120,24 @@ public class StudentServiceImpl implements StudentService {
             System.err.println(e.getMessage());
         }
         return rowDeleted;
+    }
+
+    @Override
+    public List<CGClass> findAllClass() {
+        Connection connection = baseRepository.getConnection();
+        List<CGClass> list = new ArrayList<>();
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(FIND_ALL_CLASS);
+            ResultSet result = preparedStatement.executeQuery();
+            while(result.next()) {
+                int id = result.getInt("class_id");
+                String name = result.getString("class_name");
+                list.add(new CGClass(id, name));
+            }
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+        return list;
     }
 
 

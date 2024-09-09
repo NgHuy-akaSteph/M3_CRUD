@@ -26,6 +26,14 @@
             </div>
         </div>
         <div class="form-group">
+            <label for="classId">Lớp học</label>
+            <select class="form-select" name="classId" id="classId" required>
+                <c:forEach var="cgclass" items="${list}">
+                    <option value="${cgclass.id}">${cgclass.name}</option>
+                </c:forEach>
+            </select>
+        </div>
+        <div class="form-group">
             <label for="email">Email: </label>
             <input type="email" class="form-control" id="email" name="email" required>
         </div>
