@@ -126,10 +126,12 @@ public class StudentServlet extends HttpServlet {
     // Show edit form to update student
     private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
-        request.setAttribute("student", studentService.findById(id));
-        request.setAttribute("list", studentService.findAllClass());
-        RequestDispatcher requestDispatcher = request.getRequestDispatcher("edit-student.jsp");
-        requestDispatcher.forward(request, response);
+        Student existingStudent = studentService.findById(id);
+        List<CGClass> classList = studentService.findAllClass();
+        request.setAttribute("student", existingStudent);
+        request.setAttribute("list", classList);
+        RequestDispatcher dispatcher = request.getRequestDispatcher("edit-student.jsp");
+        dispatcher.forward(request, response);
     }
 
     // Update student

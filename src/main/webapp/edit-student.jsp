@@ -15,16 +15,16 @@
         </div>
         <div class="form-group">
             <label for="name">Họ và tên:</label>
-            <input type="text" class="form-control" id="name" name="name" required>
+            <input type="text" class="form-control" id="name" name="name" value="${student.name}" required>
         </div>
         <div class="form-group">
             <label>Giới tính: </label>
             <div class="form-check">
-                <input type="radio" class="form-check-input" id="male" name="gender" value="male" required>
+                <input type="radio" class="form-check-input" id="male" name="gender" value="male" ${student.gender ? 'checked' : ''} required>
                 <label class="form-check-label" for="male">Nam</label>
             </div>
             <div class="form-check">
-                <input type="radio" class="form-check-input" id="female" name="gender" value="female" required>
+                <input type="radio" class="form-check-input" id="female" name="gender" value="female" ${!student.gender ? 'checked' : ''} required>
                 <label class="form-check-label" for="female">Nữ</label>
             </div>
         </div>
@@ -32,17 +32,17 @@
             <label for="classId">Lớp học</label>
             <select class="form-select" name="classId" id="classId" required>
                 <c:forEach var="cgclass" items="${list}">
-                    <option value="${cgclass.id}">${cgclass.name}</option>
+                    <option value="${cgclass.id}" ${cgclass.id == student.cgClass.id ? 'selected' : ''}>${cgclass.name}</option>
                 </c:forEach>
             </select>
         </div>
         <div class="form-group">
             <label for="email">Email: </label>
-            <input type="email" class="form-control" id="email" name="email" required>
+            <input type="email" class="form-control" id="email" name="email" value="${student.email}" required>
         </div>
         <div class="form-group">
             <label for="point">Điểm số:</label>
-            <input type="number" class="form-control" id="point" name="point" step="0.01" required>
+            <input type="number" class="form-control" id="point" name="point" value="${student.point}" step="0.01" required>
         </div>
         <br>
         <button type="submit" class="btn btn-primary btn-lg">Save</button>
