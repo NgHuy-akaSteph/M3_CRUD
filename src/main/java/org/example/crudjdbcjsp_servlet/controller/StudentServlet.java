@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -80,7 +81,9 @@ public class StudentServlet extends HttpServlet {
 
     // Select all students
     private void selectAll(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
-        List<Student> list = studentService.findAll();
+        String name = request.getParameter("SearchBox");
+        if(name==null) name = "";
+        List<Student> list = studentService.findByName(name);
         request.setAttribute("list", list);
         RequestDispatcher requestDispatcher = request.getRequestDispatcher("student-list.jsp");
         requestDispatcher.forward(request, response);
@@ -99,14 +102,21 @@ public class StudentServlet extends HttpServlet {
     private void insertStudent(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
         String name = request.getParameter("name");
         boolean gender = request.getParameter("gender").equals("male");
+        String genderStr = request.getParameter("gender");
         String email = request.getParameter("email");
+        Date dob = Date.valueOf(request.getParameter("dob"));
         double point = Double.parseDouble(request.getParameter("point"));
         int classId = Integer.parseInt(request.getParameter("classId"));
-        studentService.save(new Student(name, gender, email, point, new CGClass(classId)));
-        try {
+        if (studentService.emailExists(email)) {
+            request.setAttribute("errorMessage", "Email đã tồn tại. Vui lòng nhập lại.");
+            request.setAttribute("name", name);
+            request.setAttribute("gender",genderStr);
+            request.setAttribute("dob", dob);
+            request.setAttribute("point", point);
+            request.getRequestDispatcher("create-new-student.jsp").forward(request, response);
+        } else {
+            studentService.save(new Student(name, gender, dob, email, point, new CGClass(classId)));
             response.sendRedirect("/");
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
         }
     }
 
@@ -114,10 +124,7 @@ public class StudentServlet extends HttpServlet {
     private void deleteStudent(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
         if(studentService.delete(id)) {
-            List<Student> list = studentService.findAll();
-            request.setAttribute("list", list);
-            RequestDispatcher requestDispatcher = request.getRequestDispatcher("student-list.jsp");
-            requestDispatcher.forward(request, response);
+            response.sendRedirect("/");
         } else {
             System.err.println("Delete failed!");
         }
@@ -139,19 +146,16 @@ public class StudentServlet extends HttpServlet {
         int id = Integer.parseInt(request.getParameter("id"));
         String name = request.getParameter("name");
         boolean gender = request.getParameter("gender").equals("male");
+        Date dob = Date.valueOf(request.getParameter("dob"));
         int classId = Integer.parseInt(request.getParameter("classId"));
         String email = request.getParameter("email");
         double point = Double.parseDouble(request.getParameter("point"));
-        boolean isUpdated = studentService.update(new Student(id, name,gender, email, point, new CGClass(classId)));
-        if(isUpdated) {
-            List<Student> list = studentService.findAll();
-            request.setAttribute("list", list);
-            RequestDispatcher requestDispatcher = request.getRequestDispatcher("student-list.jsp");
-            requestDispatcher.forward(request, response);
+        if (studentService.emailExists(email)) {
+            request.setAttribute("errorMessage", "Email đã tồn tại. Vui lòng nhập lại.");
+            request.getRequestDispatcher("edit-student.jsp").forward(request, response);
         } else {
-            System.err.println("Update failed!");
+            studentService.update(new Student(id, name, gender, dob, email, point, new CGClass(classId)));
+            response.sendRedirect("/");
         }
     }
-
-
 }
