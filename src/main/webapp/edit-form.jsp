@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
@@ -49,7 +50,7 @@
             <input type="number" class="form-control" id="point" name="point" value="${student.point}" step="0.01" required>
         </div>
         <br>
-        <button type="submit" class="btn btn-primary btn-lg">Save</button>
+        <button type="submit" class="btn btn-primary">Save</button>
     </form>
 </div>
 

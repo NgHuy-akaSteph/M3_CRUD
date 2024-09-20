@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class BaseRepository {
 
-    private final Connection connection;
+    private final Connection connection;// tạo một connection duy nhất kết nối với database
     private static final String URL = "jdbc:mysql://localhost:3306/codegym";
     private static final String USERNAME = "root";
     private static final String PASSWORD = "1234";
@@ -19,4 +19,6 @@ public class BaseRepository {
     public Connection getConnection(){
         return connection;
     }
+
+
 }

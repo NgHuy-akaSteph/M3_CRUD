@@ -14,20 +14,49 @@
     <header class="custom-header text-center mt-4">
         <h1 class="custom-header">Quản lý học viên Codegym</h1>
     </header>
-    <br>
-    <div class="row mb-3">
-        <div class="col-md-12 text-start">
-            <a href="?action=create" class="btn btn-primary">Thêm học viên</a>
+
+    <div class="d-flex justify-content-start mb-3">
+        <a href="?action=create" class="btn btn-primary me-2">Thêm sinh viên</a>
+        <button class="btn btn-info" id="filterButton"><i class="bi bi-filter"></i> Bộ lọc</button>
+    </div>
+
+    <div id="filterForm" class="card d-none">
+        <div class="card-body">
+            <form action="?action=filter" method="post">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="name" class="form-label">Họ và tên :</label>
+                        <input type="text" class="form-control" id="name" name="name" >
+                    </div>
+                    <div class="col-md-6">
+                        <label for="className" class="form-label">Lớp học :</label>
+                        <select class="form-select" name="className" id="className" required>
+                            <option value="all">Tất cả các lớp</option>
+                            <c:forEach var="cgclass" items="${listClass}">
+                                <option value="${cgclass.name}" >${cgclass.name}</option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="startDate" class="form-label">Ngày sinh từ :</label>
+                        <input type="date" class="form-control" id="startDate" name="startDate" >
+                    </div>
+                    <div class="col-md-6">
+                        <label for="endDate" class="form-label">Ngày sinh đến :</label>
+                        <input type="date" class="form-control" id="endDate" name="endDate" >
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-secondary ">Tìm kiếm</button>
+                </div>
+            </form>
         </div>
     </div>
-    <form class="d-flex" action="/" method="get">
-        <label for="SearchBox"></label>
-        <input type="text" name="SearchBox" id="SearchBox" class="form-control me-2" placeholder="Tìm kiếm...">
-        <button class="btn btn-outline-secondary" type="submit">
-            <i class="bi bi-search"></i>
-        </button>
-    </form>
-    <br>
+
+
+
     <table id="mainTable" class="table table-bordered table-striped text-center align-middle mx-auto" style="width:100%">
         <thead>
             <tr>
@@ -42,9 +71,9 @@
             </tr>
         </thead>
         <tbody>
-            <c:forEach  var="student" items="${list}">
+            <c:forEach  var="student" items="${list}" varStatus="status">
                 <tr>
-                    <td><c:out value="${student.id}"/></td>
+                    <td><c:out value="${status.index+1}"/></td>
                     <td><c:out value="${student.name}"/></td>
                     <td>
                         <c:if test="${student.gender==true}">
@@ -77,7 +106,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Bạn có chắc chắn muốn xóa học viên <span id="studentName"></span> không?
+                Bạn có chắc chắn muốn xóa học viên <strong id="studentName"></strong> không?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -93,13 +122,13 @@
 <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
         $('#mainTable').DataTable({
-            "dom" : 'lrtip',
+            "dom": 'lrtip',
             "lengthChange": false,
             "pageLength": 5,
             "columnDefs": [
-                { "orderable": false, "targets": 7 }
+                {"orderable": false, "targets": 7}
             ]
         });
     });
@@ -115,6 +144,13 @@
         confirmDelete.href = '?action=delete&id=' + studentId;
         studentNameSpan.textContent = studentName;
     });
+
+    document.getElementById('filterButton').addEventListener('click', function () {
+        let filterForm = document.getElementById('filterForm');
+        filterForm.classList.toggle('d-none');
+    });
 </script>
 </body>
 </html>
+
+

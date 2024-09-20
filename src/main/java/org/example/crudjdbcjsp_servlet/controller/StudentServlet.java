@@ -14,6 +14,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 
 @WebServlet(name="StudentServlet", urlPatterns = {"/"})
@@ -25,9 +27,7 @@ public class StudentServlet extends HttpServlet {
         studentService = new StudentServiceImpl();
     }
 
-
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String action = request.getParameter("action");
         if (action == null) {
             action = "";
@@ -64,10 +64,13 @@ public class StudentServlet extends HttpServlet {
         try {
             switch (action) {
                 case "create":
-                    insertStudent(request, response);
+                    createStudent(request, response);
                     break;
                 case "edit":
                     editStudent(request, response);
+                    break;
+                case "filter":
+                    filterStudent(request, response);
                     break;
                 default:
                     selectAll(request, response);
@@ -81,11 +84,9 @@ public class StudentServlet extends HttpServlet {
 
     // Select all students
     private void selectAll(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
-        String name = request.getParameter("SearchBox");
-        if(name==null) name = "";
-        List<Student> list = studentService.findByName(name);
-        request.setAttribute("list", list);
-        RequestDispatcher requestDispatcher = request.getRequestDispatcher("student-list.jsp");
+        request.setAttribute("list", studentService.findAll());
+        request.setAttribute("listClass", studentService.findAllClass());
+        RequestDispatcher requestDispatcher = request.getRequestDispatcher("list.jsp");
         requestDispatcher.forward(request, response);
     }
 
@@ -94,37 +95,59 @@ public class StudentServlet extends HttpServlet {
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         List<CGClass> list = studentService.findAllClass();
         request.setAttribute("list", list);
-        RequestDispatcher requestDispatcher = request.getRequestDispatcher("create-new-student.jsp");
+        RequestDispatcher requestDispatcher = request.getRequestDispatcher("create-form.jsp");
         requestDispatcher.forward(request, response);
     }
 
     // Insert student
-    private void insertStudent(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
+    private void createStudent(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
         String name = request.getParameter("name");
         boolean gender = request.getParameter("gender").equals("male");
-        String genderStr = request.getParameter("gender");
         String email = request.getParameter("email");
         Date dob = Date.valueOf(request.getParameter("dob"));
         double point = Double.parseDouble(request.getParameter("point"));
         int classId = Integer.parseInt(request.getParameter("classId"));
-        if (studentService.emailExists(email)) {
-            request.setAttribute("errorMessage", "Email đã tồn tại. Vui lòng nhập lại.");
-            request.setAttribute("name", name);
-            request.setAttribute("gender",genderStr);
-            request.setAttribute("dob", dob);
-            request.setAttribute("point", point);
-            request.getRequestDispatcher("create-new-student.jsp").forward(request, response);
-        } else {
-            studentService.save(new Student(name, gender, dob, email, point, new CGClass(classId)));
-            response.sendRedirect("/");
+        if (isNotValidName(name)) {
+            request.setAttribute("errorMessage", "Tên chỉ bao gồm chữ cái và khoảng trắng, không chứa kí tự đặc biệt hay số !!!");
+            forwardToCreateForm(request, response, name, gender, dob, email, point, classId);
+            return;
         }
+
+        if (isNotValidDob(dob)) {
+            request.setAttribute("errorMessage", "Độ tuổi của bạn không phù hợp !!!");
+            forwardToCreateForm(request, response, name, gender, dob, email, point, classId);
+            return;
+        }
+
+        if (studentService.findByEmail(email) != null) {
+            request.setAttribute("errorMessage", "Email đã tồn tại !!!");
+            forwardToCreateForm(request, response, name, gender, dob, email, point, classId);
+            return;
+        }
+
+        if (point < 0 || point > 10) {
+            request.setAttribute("errorMessage", "Điểm số chỉ trong khoảng 0 đến 10 !!!");
+            forwardToCreateForm(request, response, name, gender, dob, email, point, classId);
+            return;
+        }
+
+        studentService.save(new Student(name, gender, dob, email, point, new CGClass(classId)));
+        response.sendRedirect(request.getContextPath() + "/");
+    }
+
+    private void forwardToCreateForm(HttpServletRequest request, HttpServletResponse response, String name, boolean gender, Date dob, String email, double point, int classId) throws ServletException, IOException {
+        Student student = new Student(name, gender, dob, email, point, new CGClass(classId));
+        request.setAttribute("student", student);
+        List<CGClass> classList = studentService.findAllClass();
+        request.setAttribute("list", classList);
+        request.getRequestDispatcher("create-form.jsp").forward(request, response);
     }
 
     // Delete student
-    private void deleteStudent(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
+    private void deleteStudent(HttpServletRequest request, HttpServletResponse response) throws SQLException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
         if(studentService.delete(id)) {
-            response.sendRedirect("/");
+            response.sendRedirect(request.getContextPath() + "/");
         } else {
             System.err.println("Delete failed!");
         }
@@ -137,7 +160,7 @@ public class StudentServlet extends HttpServlet {
         List<CGClass> classList = studentService.findAllClass();
         request.setAttribute("student", existingStudent);
         request.setAttribute("list", classList);
-        RequestDispatcher dispatcher = request.getRequestDispatcher("edit-student.jsp");
+        RequestDispatcher dispatcher = request.getRequestDispatcher("edit-form.jsp");
         dispatcher.forward(request, response);
     }
 
@@ -150,12 +173,76 @@ public class StudentServlet extends HttpServlet {
         int classId = Integer.parseInt(request.getParameter("classId"));
         String email = request.getParameter("email");
         double point = Double.parseDouble(request.getParameter("point"));
-        if (studentService.emailExists(email)) {
-            request.setAttribute("errorMessage", "Email đã tồn tại. Vui lòng nhập lại.");
-            request.getRequestDispatcher("edit-student.jsp").forward(request, response);
-        } else {
-            studentService.update(new Student(id, name, gender, dob, email, point, new CGClass(classId)));
-            response.sendRedirect("/");
+        if (isNotValidName(name)) {
+            request.setAttribute("errorMessage", "Tên chỉ bao gồm chữ cái và khoảng trắng, không chứa kí tự đặc biệt hay số !!!");
+            forwardToEditForm(request, response, name, gender, dob, email, point, classId);
+            return;
         }
+
+        if (isNotValidDob(dob)) {
+            request.setAttribute("errorMessage", "Độ tuổi của bạn không phù hợp !!!");
+            forwardToEditForm(request, response, name, gender, dob, email, point, classId);
+            return;
+        }
+
+        Student existingStudent = studentService.findByEmail(email);
+        if (existingStudent != null && existingStudent.getId() != id) {
+            request.setAttribute("errorMessage", "Email đã tồn tại !!!");
+            forwardToEditForm(request, response, name, gender, dob, email, point, classId);
+            return;
+        }
+
+        if (point < 0 || point > 10) {
+            request.setAttribute("errorMessage", "Điểm số chỉ trong khoảng 0 đến 10 !!!");
+            forwardToEditForm(request, response, name, gender, dob, email, point, classId);
+            return;
+        }
+
+        studentService.update(new Student(id, name, gender, dob, email, point, new CGClass(classId)));
+        response.sendRedirect(request.getContextPath() + "/");
+    }
+
+    private void forwardToEditForm(HttpServletRequest request, HttpServletResponse response, String name, boolean gender, Date dob, String email, double point, int classId) throws ServletException, IOException {
+        Student student = new Student(name, gender, dob, email, point, new CGClass(classId));
+        request.setAttribute("student", student);
+        List<CGClass> classList = studentService.findAllClass();
+        request.setAttribute("list", classList);
+        request.getRequestDispatcher("edit-form.jsp").forward(request, response);
+    }
+
+    private boolean isNotValidName(String name) {
+        return !name.matches("^[\\p{L}\\s]{1,150}$");
+    }
+
+    private boolean isNotValidDob(Date dob) {
+        LocalDate currentDate = LocalDate.now();
+        LocalDate birthDate = dob.toLocalDate();
+        int age = Period.between(birthDate, currentDate).getYears();
+        return !(age >= 15 && age <= 45);
+    }
+
+    private void filterStudent(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String name = request.getParameter("name");
+        String startDateStr = request.getParameter("startDate");
+        String endDateStr = request.getParameter("endDate");
+        String className = request.getParameter("className");
+        if(className.equals("all")) className = null;//set className = null để không filter theo class
+
+        Date startDate = null;
+        Date endDate = null;
+
+        if (startDateStr != null && !startDateStr.isEmpty()) {
+            startDate = Date.valueOf(startDateStr);
+        }
+        if (endDateStr != null && !endDateStr.isEmpty()) {
+            endDate = Date.valueOf(endDateStr);
+        }
+        List<Student> list = studentService.filterStudents(name, startDate, endDate, className);
+        request.setAttribute("list", list);
+        request.setAttribute("listClass", studentService.findAllClass());
+        RequestDispatcher requestDispatcher = request.getRequestDispatcher("list.jsp");
+        requestDispatcher.forward(request, response);
     }
 }
+
+

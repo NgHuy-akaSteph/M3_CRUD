@@ -116,7 +116,7 @@ public class StudentServiceImpl implements StudentService {
 
     // Delete student from database
     @Override
-    public boolean delete(int id){
+    public boolean delete(int id) {
         boolean rowDeleted = false;
         Connection connection = baseRepository.getConnection();
         try (PreparedStatement statement = connection.prepareStatement(DELETE_SQL)) {
@@ -167,17 +167,61 @@ public class StudentServiceImpl implements StudentService {
 
     // Check if email exists
     @Override
-    public boolean emailExists(String email) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM student WHERE student_email = ?";
+    public Student findByEmail(String email) {
+        String sql = "SELECT * FROM student WHERE student_email = ?";
         Connection connection = baseRepository.getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, email);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return resultSet.getInt(1) > 0;
-                }
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, email);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                return new Student(
+                        resultSet.getInt("student_id"),
+                        resultSet.getString("student_name"),
+                        resultSet.getBoolean("student_gender"),
+                        resultSet.getDate("student_dob"),
+                        resultSet.getString("student_email"),
+                        resultSet.getDouble("student_point"),
+                        new CGClass(resultSet.getInt("class_id"))
+                );
             }
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
         }
-        return false;
+        return null;
+    }
+
+    @Override
+    public List<Student> filterStudents(String name, Date startDate, Date endDate, String className) {
+        List<Student> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT s.*, c.class_name FROM student s JOIN class c ON s.class_id = c.class_id WHERE 1=1");
+        if (name != null && !name.isEmpty()) {
+            sql.append(" AND student_name LIKE ?");
+        }
+        if (startDate != null && endDate != null) {
+            sql.append(" AND student_dob BETWEEN ? AND ?");
+        }
+        if (className != null && !className.isEmpty()) {
+            sql.append(" AND class_name LIKE ?");
+        }
+        sql.append(" ORDER BY s.student_id");
+        Connection connection = baseRepository.getConnection();
+        try (PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+            if (name != null && !name.isEmpty()) {
+                statement.setString(paramIndex++, "%" + name + "%");
+            }
+            if (startDate != null && endDate != null) {
+                statement.setDate(paramIndex++, startDate);
+                statement.setDate(paramIndex++, endDate);
+            }
+            if (className != null && !className.isEmpty()) {
+                statement.setString(paramIndex, "%" + className + "%");
+            }
+            ResultSet resultSet = statement.executeQuery();
+            list = toList(resultSet);
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+        return list;
     }
 }

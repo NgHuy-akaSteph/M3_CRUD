@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
@@ -12,41 +13,42 @@
     <form action="?action=create" method="post">
         <div class="form-group">
             <label for="name">Họ và tên:</label>
-            <input type="text" class="form-control" id="name" name="name" required>
+            <input type="text" class="form-control" id="name" name="name" value="${student.name}" required>
         </div>
         <div class="form-group">
-            <label>Giới tính: </label>
+            <label>Giới tính:
             <div class="form-check">
-                <input type="radio" class="form-check-input" id="male" name="gender" value="male" required>
+                <input type="radio" class="form-check-input" id="male" name="gender" value="male" ${student.gender ? 'checked' : ''} required>
                 <label class="form-check-label" for="male">Nam</label>
             </div>
             <div class="form-check">
-                <input type="radio" class="form-check-input" id="female" name="gender" value="female" required>
+                <input type="radio" class="form-check-input" id="female" name="gender" value="female" ${!student.gender ? 'checked' : ''} required>
                 <label class="form-check-label" for="female">Nữ</label>
             </div>
+            </label>
         </div>
         <div class="form-group">
             <label for="dob">Ngày sinh:</label>
-            <input type="date" class="form-control" id="dob" name="dob" required>
+            <input type="date" class="form-control" id="dob" name="dob"  value="${student.dob}"required>
         </div>
         <div class="form-group">
             <label for="classId">Lớp học</label>
             <select class="form-select" name="classId" id="classId" required>
                 <c:forEach var="cgclass" items="${list}">
-                    <option value="${cgclass.id}">${cgclass.name}</option>
+                    <option value="${cgclass.id}" ${cgclass.id == student.cgClass.id ? 'selected' : ''}>${cgclass.name}</option>
                 </c:forEach>
             </select>
         </div>
         <div class="form-group">
             <label for="email">Email: </label>
-            <input type="email" class="form-control" id="email" name="email" required>
+            <input type="email" class="form-control" id="email" name="email" value="${student.email}" required>
         </div>
         <div class="form-group">
             <label for="point">Điểm số:</label>
-            <input type="number" class="form-control" id="point" name="point" step="0.01" required>
+            <input type="number" class="form-control" id="point" name="point" step="0.01" value="${student.point}" required>
         </div>
         <br>
-        <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+        <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 </div>
 
@@ -78,3 +80,4 @@
 </script>
 </body>
 </html>
+

@@ -3,6 +3,7 @@ package org.example.crudjdbcjsp_servlet.service;
 import org.example.crudjdbcjsp_servlet.model.CGClass;
 import org.example.crudjdbcjsp_servlet.model.Student;
 
+import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -22,5 +23,7 @@ public interface StudentService {
 
     List<CGClass> findAllClass();
 
-    boolean emailExists(String email) throws SQLException;
+    Student findByEmail(String email) ;
+
+    List<Student> filterStudents (String name, Date startDate, Date endDate, String className) ;
 }
